@@ -1,0 +1,10 @@
+:root {
+    --red: #E2222F;
+    --black: #000000;
+    --white: #ffffff;
+}
+
+.css-19z1ozs-MuiPaper-root-MuiAppBar-root {
+    background-color: var(--white) !important;
+    color: var(--black) !important;
+}
