@@ -15,7 +15,7 @@ import ListItem from "@mui/material/ListItem";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import HomeIcon from "@mui/icons-material/Home";
-import GroupsIcon from "@mui/icons-material/Groups";
+import StorageIcon from '@mui/icons-material/Storage';
 import "./Navbar.css";
 
 const drawerWidth = 240;
@@ -51,8 +51,7 @@ const Navigationbar = (props) => {
 
   return (
     <div style={{ display: "flex" }}>
-      {/* AppBar */}
-      <AppBar position="fixed" open={open} style={{ backgroundColor: "white" }}>
+      <AppBar position="fixed" open={open} style={{ backgroundColor: "#f2f2f2" }}>
         <Toolbar>
           <IconButton
             color="inherit"
@@ -69,7 +68,6 @@ const Navigationbar = (props) => {
         </Toolbar>
       </AppBar>
 
-      {/* Drawer */}
       <MuiDrawer
         variant="persistent"
         open={open}
@@ -100,7 +98,7 @@ const Navigationbar = (props) => {
           <Divider />
           <ListItem button onClick={() => changeRoute("/database")}>
             <ListItemIcon>
-              <GroupsIcon />
+              <StorageIcon />
             </ListItemIcon>
             <ListItemText primary="Database" />
           </ListItem>
