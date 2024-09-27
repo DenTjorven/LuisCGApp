@@ -9,7 +9,7 @@ const CARD_ART_PATH = `${process.env.PUBLIC_URL}/card_art/`;
 
 const replaceElementImagePath = (effectText) => {
   return effectText.replace(
-    /\{Basic Elements\/(\w+)\.PNG\}/g,
+    /\{Basic Elements\/(\w+)\.[Pp][Nn][Gg]\}/g,
     (match, element) => {
       const elementUppercase = element.toUpperCase();
       return `<img src="${ELEMENTS_PATH}${elementUppercase}.png" alt="${elementUppercase}" style="width: 30px; height: 30px; vertical-align: middle;" />`;
