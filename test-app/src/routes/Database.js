@@ -4,8 +4,8 @@ import { gapi } from "gapi-script";
 const API_KEY = "AIzaSyBzGmgHoBF4IijhwKDGibedlC-d3bg9Qw0";
 const SHEET_ID = "1XXv0VAbyBmGy9n7qT9evqJB9KafSrtJ7kPDR6IBlLUg";
 const SHEET_NAMES = ["FIRE", "WATER", "WIND", "EARTH", "DARK", "LIGHT"];
-const ELEMENTS_PATH = "/element_art/";
-const CARD_ART_PATH = "/card_art/";
+const ELEMENTS_PATH = `${process.env.PUBLIC_URL}/element_art/`;
+const CARD_ART_PATH = `${process.env.PUBLIC_URL}/card_art/`;
 
 const replaceElementImagePath = (effectText) => {
   return effectText.replace(
@@ -20,10 +20,11 @@ const replaceElementImagePath = (effectText) => {
 
 const addCardArtPath = (card) => {
   const { Set, Id } = card;
-  const cardIdPadded = Id.padStart(3, "0"); // Ensuring the ID is always three digits
+  const cardIdPadded = Id.padStart(3, "0"); 
   card.cardArtPath = `${CARD_ART_PATH}${Set}-${cardIdPadded}.jpg`;
   return card;
 };
+
 
 const Database = () => {
   const [sheetData, setSheetData] = useState({});
