@@ -39,6 +39,7 @@ const Database = () => {
 
   const BOOLEAN_ATTRIBUTES = [
     "Summon",
+    "Special",
     "Double Strike",
     "Void",
     "Bounce",
