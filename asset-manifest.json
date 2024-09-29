@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/LuisCGApp/static/css/main.e888400d.css",
-    "main.js": "/LuisCGApp/static/js/main.6a581c2b.js",
+    "main.js": "/LuisCGApp/static/js/main.228ce6b7.js",
     "index.html": "/LuisCGApp/index.html",
     "main.e888400d.css.map": "/LuisCGApp/static/css/main.e888400d.css.map",
-    "main.6a581c2b.js.map": "/LuisCGApp/static/js/main.6a581c2b.js.map"
+    "main.228ce6b7.js.map": "/LuisCGApp/static/js/main.228ce6b7.js.map"
   },
   "entrypoints": [
     "static/css/main.e888400d.css",
-    "static/js/main.6a581c2b.js"
+    "static/js/main.228ce6b7.js"
   ]
 }
