@@ -14,7 +14,7 @@ const replaceElementImagePath = (effectText) => {
     /\{Basic Elements\/(\w+)\.[Pp][Nn][Gg]\}/g,
     (match, element) => {
       const elementUppercase = element.toUpperCase();
-      return `<img src="${ELEMENTS_PATH}${elementUppercase}.png" alt="${elementUppercase}" style="width: 20px; height: 20px; vertical-align: middle;" />`;
+      return `<img src="${ELEMENTS_PATH}${elementUppercase}.png" alt="${elementUppercase}" style="width: 30px; height: 30px; vertical-align: middle;" />`;
     }
   );
 
@@ -39,16 +39,51 @@ const replaceElementImagePath = (effectText) => {
       const uniquePattern = new RegExp(`(?!^)\\b${keyword}\\b`, "gi");
       effectText = effectText.replace(uniquePattern, `<br />${keyword}`);
     }
+
+    // Handle "ranged" separately, always add a new line
+    if (keyword.toLowerCase() === "ranged") {
+      const rangedPattern = new RegExp(`(?!^)\\b${keyword}\\b`, "gi");
+      effectText = effectText.replace(rangedPattern, `<br />${keyword}`);
+    }
   });
 
   // Ensure no new lines are added before keywords inside quotes
   effectText = effectText.replace(/"(\s*<br \/>)?\s*(\b(?:Summon|Special|Double Strike|Void|Bounce|Discard|Freeze|Ranged|Mill|Grave|Hand|Crystalize|Flow|Heal|Charge|Link|Bubble|Generator)\b)/gi, `"$2`);
 
-  // Add a new line before "If this Monster is Destroyed by your own effect"
-  effectText = effectText.replace(/(^|\s)(If this Monster is Destroyed by your own effect)/g, `<br />$2`);
+  // New lines for phrases
+  const phrasesWithNewLineBefore = [
+    "If you've played at least 3 Cards this turn,",
+    "When a Card is Bounced",
+    "When you Summon",
+    "If this Card is Milled",
+    "If this Monster is Discarded",
+    "If this Monster is Bounced",
+    "Whenever you Heal",
+    "If this Monster is Destroyed by your own effect",
+    "This Monster takes no Damage from Frozen Monsters",
+    "Once per turn",
+    "At the end of your turn",
+    "If this Card is Voided",
+    "If this Monster is Summoned from the Grave",
+    "For every 4 Voided Cards"
+  ];
 
-  // Add a new line before "This Monster takes no Damage from Frozen Monsters"
-  effectText = effectText.replace(/(^|\s)(This Monster takes no Damage from Frozen Monsters)/g, `<br />$2`);
+  phrasesWithNewLineBefore.forEach(phrase => {
+    effectText = effectText.replace(new RegExp(`(^|\\s)(${phrase})`, "g"), `<br />$2`);
+  });
+
+  // New line after specified phrases
+  const phrasesWithNewLineAfter = [
+    "Turns",
+    "Permanent"
+  ];
+
+  phrasesWithNewLineAfter.forEach(phrase => {
+    effectText = effectText.replace(new RegExp(`(${phrase})(\\s|<br \\/>)*`, "g"), `$1<br />`);
+  });
+
+  // Special case for "---"
+  effectText = effectText.replace(/(\s---\s)/g, `<br /><br />---<br /><br />`);
 
   return effectText;
 };
