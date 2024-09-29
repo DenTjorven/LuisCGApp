@@ -47,6 +47,9 @@ const replaceElementImagePath = (effectText) => {
   // Add a new line before "If this Monster is Destroyed by your own effect"
   effectText = effectText.replace(/(^|\s)(If this Monster is Destroyed by your own effect)/g, `<br />$2`);
 
+  // Add a new line before "This Monster takes no Damage from Frozen Monsters"
+  effectText = effectText.replace(/(^|\s)(This Monster takes no Damage from Frozen Monsters)/g, `<br />$2`);
+
   return effectText;
 };
 
