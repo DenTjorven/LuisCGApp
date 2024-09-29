@@ -14,7 +14,7 @@ const replaceElementImagePath = (effectText) => {
     /\{Basic Elements\/(\w+)\.[Pp][Nn][Gg]\}/g,
     (match, element) => {
       const elementUppercase = element.toUpperCase();
-      return `<img src="${ELEMENTS_PATH}${elementUppercase}.png" alt="${elementUppercase}" style="width: 30px; height: 30px; vertical-align: middle;" />`;
+      return `<img src="${ELEMENTS_PATH}${elementUppercase}.png" alt="${elementUppercase}" style="width: 20px; height: 20px; vertical-align: middle;" />`;
     }
   );
 
