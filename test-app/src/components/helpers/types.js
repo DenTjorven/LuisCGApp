@@ -32,7 +32,7 @@ export const ATTRIBUTES = [
     'Generator',
   ];
   
-  export const BOOLEAN_ATTRIBUTES = [
+  export const BOOLEAN_KEYWORDS = [
     'Summon',
     'Special',
     'Active',

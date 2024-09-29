@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { gapi } from "gapi-script";
+import { BOOLEAN_KEYWORDS } from "../components/helpers/types";
 
 const API_KEY = "AIzaSyBzGmgHoBF4IijhwKDGibedlC-d3bg9Qw0";
 const SHEET_ID = "1XXv0VAbyBmGy9n7qT9evqJB9KafSrtJ7kPDR6IBlLUg";
@@ -8,13 +9,45 @@ const ELEMENTS_PATH = `${process.env.PUBLIC_URL}/element_art/`;
 const CARD_ART_PATH = `${process.env.PUBLIC_URL}/card_art/`;
 
 const replaceElementImagePath = (effectText) => {
-  return effectText.replace(
+  // Replace element image paths
+  effectText = effectText.replace(
     /\{Basic Elements\/(\w+)\.[Pp][Nn][Gg]\}/g,
     (match, element) => {
       const elementUppercase = element.toUpperCase();
-      return `<img src="${ELEMENTS_PATH}${elementUppercase}.png" alt="${elementUppercase}" style="width: 30px; height: 30px; vertical-align: middle;" />`;
+      return `<img src="${ELEMENTS_PATH}${elementUppercase}.png" alt="${elementUppercase}" style="width: 20px; height: 20px; vertical-align: middle;" />`;
     }
   );
+
+  // Add new line after "Must Special Summon"
+  effectText = effectText.replace(/(Must Special Summon)/g, "$1<br />");
+
+  // Add new line before boolean keywords followed by ":" or keywords followed by a number and an image
+  BOOLEAN_KEYWORDS.forEach((keyword) => {
+    // New line before keywords followed by ":"
+    const keywordPattern = new RegExp(`([^"])(${keyword})(:)(?=\\s)`, "g");
+    effectText = effectText.replace(keywordPattern, `$1<br />$2$3`);
+
+    // New line before keywords followed by a number and an image
+    const keywordWithNumberAndImagePattern = new RegExp(
+      `([^"])(\\b${keyword}\\b)\\s+(\\d+)\\s*<img src="([^"]*)`,
+      "g"
+    );
+    effectText = effectText.replace(keywordWithNumberAndImagePattern, `$1<br />$2 $3 <img src="$4`);
+
+    // Handle "unique" separately, always add a new line
+    if (keyword.toLowerCase() === "unique") {
+      const uniquePattern = new RegExp(`(?!^)\\b${keyword}\\b`, "gi");
+      effectText = effectText.replace(uniquePattern, `<br />${keyword}`);
+    }
+  });
+
+  // Ensure no new lines are added before keywords inside quotes
+  effectText = effectText.replace(/"(\s*<br \/>)?\s*(\b(?:Summon|Special|Double Strike|Void|Bounce|Discard|Freeze|Ranged|Mill|Grave|Hand|Crystalize|Flow|Heal|Charge|Link|Bubble|Generator)\b)/gi, `"$2`);
+
+  // Add a new line before "If this Monster is Destroyed by your own effect"
+  effectText = effectText.replace(/(^|\s)(If this Monster is Destroyed by your own effect)/g, `<br />$2`);
+
+  return effectText;
 };
 
 const addCardArtPath = (card) => {
@@ -384,7 +417,7 @@ const Database = () => {
         style={{
           tableLayout: "auto",
           width: "90%",
-          maxWidth: "1200px",
+          maxWidth: "1500px",
           borderCollapse: "collapse",
           padding: "10px",
         }}
