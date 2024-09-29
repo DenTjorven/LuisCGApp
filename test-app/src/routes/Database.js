@@ -112,6 +112,7 @@ const Database = () => {
     "Summon",
     "Special",
     "Double Strike",
+    "Death",
     "Void",
     "Bounce",
     "Discard",
