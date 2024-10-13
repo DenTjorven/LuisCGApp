@@ -118,6 +118,7 @@ const Database = () => {
     "Discard",
     "Freeze",
     "Ranged",
+    "Draw",
     "Mill",
     "Grave",
     "Hand",
@@ -187,7 +188,7 @@ const Database = () => {
         const objects = data.slice(1).map((row) => {
           const obj = {};
           attributes.forEach((attr, i) => {
-            if (i >= 14 && i <= 35) {
+            if (i >= 14 && i <= 36) {
               obj[attr] = row[i] === "Y";
             } else {
               obj[attr] = row[i] || "";

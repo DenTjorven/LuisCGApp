@@ -44,6 +44,7 @@ export const ATTRIBUTES = [
     'Discard',
     'Freeze',
     'Ranged',
+    'Draw',
     'Mill',
     'Grave',
     'Hand',
