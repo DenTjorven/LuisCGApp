@@ -65,7 +65,11 @@ const replaceElementImagePath = (effectText) => {
     "At the end of your turn",
     "If this Card is Voided",
     "If this Monster is Summoned from the Grave",
-    "For every 4 Voided Cards"
+    "For every 4 Voided Cards",
+    "At the End of your turn:",
+    "This Card costs",
+    "Linked:",
+    "Charged:"
   ];
 
   phrasesWithNewLineBefore.forEach(phrase => {
@@ -83,7 +87,7 @@ const replaceElementImagePath = (effectText) => {
   });
 
   // Special case for "---"
-  effectText = effectText.replace(/(\s---\s)/g, `<br /><br />---<br /><br />`);
+  effectText = effectText.replace(/(\s*\\?---\s*)/g, `<br /><br />---<br /><br />`);
 
   return effectText;
 };
@@ -120,6 +124,7 @@ const Database = () => {
     "Ranged",
     "Draw",
     "Mill",
+    "Dig",
     "Grave",
     "Hand",
     "Unique",
@@ -188,7 +193,7 @@ const Database = () => {
         const objects = data.slice(1).map((row) => {
           const obj = {};
           attributes.forEach((attr, i) => {
-            if (i >= 14 && i <= 36) {
+            if (i >= 14 && i <= 37) {
               obj[attr] = row[i] === "Y";
             } else {
               obj[attr] = row[i] || "";
@@ -321,6 +326,7 @@ const Database = () => {
             <option value="Demon">Demon</option>
             <option value="Hume">Hume</option>
             <option value="Dragon">Dragon</option>
+            <option value="Machine">Machine</option>
             <option value="Spell">Spell</option>
             <option value="Relic">Relic</option>
           </select>

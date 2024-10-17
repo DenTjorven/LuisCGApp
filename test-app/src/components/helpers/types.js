@@ -46,6 +46,7 @@ export const ATTRIBUTES = [
     'Ranged',
     'Draw',
     'Mill',
+    'Dig',
     'Grave',
     'Hand',
     'Unique',
