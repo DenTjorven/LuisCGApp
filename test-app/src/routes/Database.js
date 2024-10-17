@@ -89,6 +89,8 @@ const replaceElementImagePath = (effectText) => {
   // Special case for "---"
   effectText = effectText.replace(/(\s*\\?---\s*)/g, `<br /><br />---<br /><br />`);
 
+  effectText = effectText.replace(/Monsters\s*Choose/g, 'Monsters<br />Choose');
+
   return effectText;
 };
 
