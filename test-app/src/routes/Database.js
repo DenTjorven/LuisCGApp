@@ -56,7 +56,7 @@ const replaceElementImagePath = (effectText) => {
     "When a Card is Bounced",
     "When you Summon",
     "If this Card is Milled",
-    "If this Monster is Discarded",
+    "If this Card is Discarded",
     "If this Monster is Bounced",
     "Whenever you Heal",
     "If this Monster is Destroyed by your own effect",
@@ -68,8 +68,12 @@ const replaceElementImagePath = (effectText) => {
     "For every 4 Voided Cards",
     "At the End of your turn:",
     "This Card costs",
+    "You can Target this Monster",
+    "Your Monsters activate their",
     "Linked:",
-    "Charged:"
+    "Charged:",
+    "For every Friendly",
+    "If there are at least"
   ];
 
   phrasesWithNewLineBefore.forEach(phrase => {
