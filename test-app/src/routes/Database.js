@@ -73,7 +73,6 @@ const replaceElementImagePath = (effectText) => {
     "Linked:",
     "Charged:",
     "For every Friendly",
-    "If there are at least",
     "If there are at least 4 Humes in your Grave,",
     "If there are at least 6 Humes in your Grave,"
   ];
