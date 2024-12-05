@@ -103,6 +103,13 @@ const Navigationbar = (props) => {
             <ListItemText primary="Database" />
           </ListItem>
           <Divider />
+          <ListItem button onClick={() => changeRoute("/draft")}>
+            <ListItemIcon>
+              <StorageIcon />
+            </ListItemIcon>
+            <ListItemText primary="Draft" />
+          </ListItem>
+          <Divider />
         </List>
       </MuiDrawer>
 
