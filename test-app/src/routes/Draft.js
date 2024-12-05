@@ -235,7 +235,7 @@ const Draft = () => {
       {step === 2 && (
         <div>
           <h2>Select a Type</h2>
-          {getRandomOptions(TYPES, 3).map((type) => (
+          {getRandomOptions(TYPES, 2).map((type) => (
             <button
               key={type}
               onClick={() => handleSelectType(type)}
