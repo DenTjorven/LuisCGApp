@@ -8,8 +8,9 @@ const TYPES = ["Beast", "Demon", "Hume", "Dragon", "Machine"];
 const ELEMENTS_PATH = `${process.env.PUBLIC_URL}/element_art/`;
 const CARD_ART_PATH = `${process.env.PUBLIC_URL}/card_art/`;
 
-function getRandomOptions(array, count) {
-  const shuffled = [...array].sort(() => Math.random() - 0.5);
+function getRandomOptions(array, count, exclude = []) {
+  const available = array.filter((item) => !exclude.includes(item));
+  const shuffled = [...available].sort(() => Math.random() - 0.5);
   return shuffled.slice(0, count);
 }
 
@@ -96,32 +97,89 @@ const Draft = () => {
 
   const handleSelectType = (type) => {
     setSelectedType(type);
-    generateNextChoices(selectedElement, type);
+    generateNextChoices(selectedElement, type, []);
     setStep(3);
   };
 
-  const generateNextChoices = (element, type) => {
+  const generateNextChoices = (element, type, exclude = [], draftRound) => {
     const allCards = Object.values(sheetData).flat();
-    const elementCards = allCards.filter((card) => card.Element === element);
-    const typeCards = allCards.filter((card) => card.Type === type);
-    const randomCards = getRandomOptions(allCards, 2);
-
-    setCurrentChoices([
-      ...getRandomOptions(elementCards, 2),
-      ...getRandomOptions(typeCards, 1),
-      ...randomCards,
-    ]);
-  };
+    const filteredCards = allCards.filter(
+      (card) =>
+        card.LVL === "LV3" &&
+        card.Type !== "Relic" &&
+        card.Type !== "Spell"
+    );
+  
+    const elementCards = filteredCards.filter((card) => card.Element === element);
+    const typeCards = filteredCards.filter((card) => card.Type === type);
+    const randomCards = getRandomOptions(filteredCards, 2, exclude);
+  
+    let choices = [];
+    if (draftRound === undefined) {
+      draftRound = 0
+    } 
+    console.log(draftRound)
+    if ([0, 24, 49].includes(draftRound)) {
+      choices = [
+        ...getRandomOptions(elementCards, 2, exclude),
+        ...getRandomOptions(typeCards, 1, exclude),
+        ...randomCards,
+      ];
+    } else {
+      choices = [
+        ...getRandomOptions(allCards.filter((card) => card.Element === element), 2, exclude),
+        ...getRandomOptions(allCards.filter((card) => card.Type === type), 1, exclude),
+        ...getRandomOptions(allCards, 2, exclude),
+      ];
+    }
+  
+    const uniqueChoices = [];
+    const seen = new Set();
+  
+    const getUniqueCard = (cardList) => {
+      let card = cardList.pop();
+      while (seen.has(card["Card Name"])) {
+        if (cardList.length === 0) break;
+        card = cardList.pop();
+      }
+      return card;
+    };
+  
+    const remainingChoices = [...choices];
+    while (uniqueChoices.length < 5 && remainingChoices.length > 0) {
+      const card = getUniqueCard(remainingChoices);
+      if (!seen.has(card["Card Name"])) {
+        seen.add(card["Card Name"]);
+        uniqueChoices.push(card);
+      }
+    }
+    while (uniqueChoices.length < 5) {
+      const additionalCards = getRandomOptions(filteredCards, 5 - uniqueChoices.length, exclude);
+      additionalCards.forEach((card) => {
+        if (!seen.has(card["Card Name"])) {
+          seen.add(card["Card Name"]);
+          uniqueChoices.push(card);
+        }
+      });
+    }
+  
+    setCurrentChoices(uniqueChoices);
+  };  
+  
 
   const handleChooseCard = (card) => {
-    setDraftedCards([...draftedCards, card]);
-    if (draftedCards.length + 1 < MAX_CARDS) {
-      generateNextChoices(selectedElement, selectedType);
+    const updatedCards = [...draftedCards, card];
+    const newDraftRound = updatedCards.length;
+  
+    setDraftedCards(updatedCards);
+    if (newDraftRound < MAX_CARDS) {
+      generateNextChoices(selectedElement, selectedType, currentChoices, newDraftRound);
     } else {
       setStep(4);
     }
   };
-
+  
+  
   const renderCard = (card, index) => (
     <div
       key={`${card["Card Name"]}-${index}`}
@@ -171,39 +229,18 @@ const Draft = () => {
     </div>
   );
 
-  const renderDraftedList = () => {
-    const groupedCards = draftedCards.reduce((acc, card) => {
-      const key = card["Card Name"];
-      acc[key] = acc[key] ? { ...card, count: acc[key].count + 1 } : { ...card, count: 1 };
-      return acc;
-    }, {});
+  const renderDraftedList = () => (
+    <div style={{ marginBottom: "20px", fontSize: "0.9rem", textAlign: "left" }}>
+      <h4>Drafted Cards:</h4>
+      <ul>
+        {draftedCards.map((card, index) => (
+          <li key={index}>{card["Card Name"]}</li>
+        ))}
+      </ul>
+    </div>
+  );
 
-    return Object.values(groupedCards).map((card) => (
-      <div
-        key={card["Card Name"]}
-        style={{
-          padding: "10px",
-          margin: "10px 0",
-          border: "1px solid #ddd",
-          borderRadius: "8px",
-          backgroundColor: "#f0f0f0",
-        }}
-      >
-        <span
-          style={{
-            fontWeight: "bold",
-            fontSize: "1.2rem",
-            display: "inline-block",
-            marginBottom: "5px",
-          }}
-        >
-          {card.count}x {card["Card Name"]}
-        </span>
-      </div>
-    ));
-  };
-
-  const roundNumber = Math.floor((draftedCards.length)) + 1;
+  const roundNumber = draftedCards.length + 1;
 
   if (loading) {
     return <div>Loading...</div>;
@@ -235,7 +272,7 @@ const Draft = () => {
       {step === 2 && (
         <div>
           <h2>Select a Type</h2>
-          {getRandomOptions(TYPES, 2).map((type) => (
+          {getRandomOptions(TYPES, 3).map((type) => (
             <button
               key={type}
               onClick={() => handleSelectType(type)}
@@ -253,13 +290,17 @@ const Draft = () => {
           <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center" }}>
             {currentChoices.map((card, index) => renderCard(card, index))}
           </div>
+          {renderDraftedList()}
         </div>
       )}
 
       {step === 4 && (
         <div>
-          <h2>Draft Completed</h2>
+          <h2>Draft Complete!</h2>
           {renderDraftedList()}
+          <button onClick={handleStartDraft} style={startButtonStyle}>
+            Draft Again
+          </button>
         </div>
       )}
     </div>
@@ -267,11 +308,10 @@ const Draft = () => {
 };
 
 const startButtonStyle = {
-  margin: "20px",
-  padding: "15px 30px",
+  padding: "20px 40px",
   fontSize: "1.5rem",
-  backgroundColor: "#4caf50",
-  color: "white",
+  backgroundColor: "#2196F3",
+  color: "#fff",
   border: "none",
   borderRadius: "10px",
   cursor: "pointer",
@@ -280,11 +320,11 @@ const startButtonStyle = {
 const largeButtonStyle = {
   margin: "10px",
   padding: "10px 20px",
-  fontSize: "1.5rem",
-  backgroundColor: "#2196F3",
-  color: "white",
+  fontSize: "1.2rem",
+  backgroundColor: "#FF9800",
+  color: "#fff",
   border: "none",
-  borderRadius: "8px",
+  borderRadius: "10px",
   cursor: "pointer",
 };
 
