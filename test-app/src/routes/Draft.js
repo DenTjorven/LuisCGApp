@@ -17,12 +17,13 @@ function getRandomOptions(array, count, exclude = []) {
 const Draft = () => {
   const [step, setStep] = useState(0);
   const [sheetData, setSheetData] = useState({});
-  const [selectedElement, setSelectedElement] = useState(null);
+  const [selectedElements, setSelectedElements] = useState([]);
   const [selectedType, setSelectedType] = useState(null);
   const [currentChoices, setCurrentChoices] = useState([]);
   const [draftedCards, setDraftedCards] = useState([]);
+  const [round, setRound] = useState(0);
   const [loading, setLoading] = useState(true);
-  const MAX_CARDS = 50;
+  const MAX_CARDS = 45;
 
   useEffect(() => {
     const initClient = () => {
@@ -86,114 +87,181 @@ const Draft = () => {
   const handleStartDraft = () => {
     setStep(1);
     setDraftedCards([]);
-    setSelectedElement(null);
+    setSelectedElements([]);
     setSelectedType(null);
+    setRound(0);
   };
 
   const handleSelectElement = (element) => {
-    setSelectedElement(element);
-    setStep(2);
+    if (selectedElements.includes(element)) return;
+
+    const updatedElements = [...selectedElements, element];
+    setSelectedElements(updatedElements);
+
+    if (updatedElements.length < 2) {
+      setStep(1);
+    } else {
+      setStep(2);
+    }
   };
 
   const handleSelectType = (type) => {
     setSelectedType(type);
-    generateNextChoices(selectedElement, type, []);
+    generateNextChoices(selectedElements[0], type, [], 0);
     setStep(3);
   };
 
-  const generateNextChoices = (element, type, exclude = [], draftRound) => {
+  const generateNextChoices = (element, type, exclude = [], nextRound) => {
     const allCards = Object.values(sheetData).flat();
-    const filteredCards = allCards.filter(
-      (card) =>
-        card.LVL === "LV3" &&
-        card.Type !== "Relic" &&
-        card.Type !== "Spell"
-    );
+    const specialPickRounds = [0, 23, 45];
+    const isSpecialPick = specialPickRounds.includes(nextRound);
   
-    const elementCards = filteredCards.filter((card) => card.Element === element);
-    const typeCards = filteredCards.filter((card) => card.Type === type);
-    const randomCards = getRandomOptions(filteredCards, 2, exclude);
-  
-    let choices = [];
-    if (draftRound === undefined) {
-      draftRound = 0
-    } 
-    console.log(draftRound)
-    if ([0, 24, 49].includes(draftRound)) {
-      choices = [
-        ...getRandomOptions(elementCards, 2, exclude),
-        ...getRandomOptions(typeCards, 1, exclude),
-        ...randomCards,
-      ];
-    } else {
-      choices = [
-        ...getRandomOptions(allCards.filter((card) => card.Element === element), 2, exclude),
-        ...getRandomOptions(allCards.filter((card) => card.Type === type), 1, exclude),
-        ...getRandomOptions(allCards, 2, exclude),
-      ];
-    }
-  
-    const uniqueChoices = [];
-    const seen = new Set();
-  
-    const getUniqueCard = (cardList) => {
-      let card = cardList.pop();
-      while (seen.has(card["Card Name"])) {
-        if (cardList.length === 0) break;
-        card = cardList.pop();
-      }
-      return card;
+    // Function to filter cards
+    const filterCards = (criteria) => {
+      return allCards.filter(
+        (card) =>
+          criteria(card) &&
+          (!isSpecialPick || (card.LVL === "LV3" && card.Type !== "Relic" && card.Type !== "Spell"))
+      );
     };
   
-    const remainingChoices = [...choices];
-    while (uniqueChoices.length < 5 && remainingChoices.length > 0) {
-      const card = getUniqueCard(remainingChoices);
+    // Filter pools
+    const elementCards = filterCards((card) => card.Element === element);
+    const typeCards = filterCards((card) => card.Type === type);
+    const randomCards = getRandomOptions(filterCards(() => true), 2, exclude);
+  
+    let choices = [];
+
+      
+  console.log(round);
+  console.log(nextRound)
+  console.log(element);
+  console.log(elementCards);
+  console.log(typeCards);
+  console.log(randomCards);
+  
+    if (isSpecialPick) {
+      // Special pick uses the same pools with restrictions
+      choices = [
+        ...getRandomOptions(elementCards, 2, exclude).map((card) => ({
+          ...card,
+          pool: "element",
+        })),
+        ...getRandomOptions(typeCards, 1, exclude).map((card) => ({
+          ...card,
+          pool: "type",
+        })),
+        ...randomCards.map((card) => ({
+          ...card,
+          pool: "random",
+        })),
+      ];
+    } else if (round < 23) {
+      // Standard picks (first 23 rounds)
+      choices = [
+        ...getRandomOptions(elementCards, 2, exclude).map((card) => ({
+          ...card,
+          pool: "element",
+        })),
+        ...getRandomOptions(typeCards, 1, exclude).map((card) => ({
+          ...card,
+          pool: "type",
+        })),
+        ...randomCards.map((card) => ({
+          ...card,
+          pool: "random",
+        })),
+      ];
+    } else {
+      // Standard picks (after round 23)
+      const secondElementCards = filterCards(
+        (card) => card.Element === selectedElements[1]
+      );
+      choices = [
+        ...getRandomOptions(secondElementCards, 2, exclude).map((card) => ({
+          ...card,
+          pool: "element",
+        })),
+        ...getRandomOptions(typeCards, 1, exclude).map((card) => ({
+          ...card,
+          pool: "type",
+        })),
+        ...randomCards.map((card) => ({
+          ...card,
+          pool: "random",
+        })),
+      ];
+    }
+  
+    // Remove duplicates while keeping track of the pool
+    const seen = new Set();
+    const uniqueChoices = choices.filter((card) => {
       if (!seen.has(card["Card Name"])) {
         seen.add(card["Card Name"]);
-        uniqueChoices.push(card);
+        return true;
       }
-    }
+      return false;
+    });
+  
+    // Fill choices if fewer than 5 remain
     while (uniqueChoices.length < 5) {
-      const additionalCards = getRandomOptions(filteredCards, 5 - uniqueChoices.length, exclude);
-      additionalCards.forEach((card) => {
-        if (!seen.has(card["Card Name"])) {
-          seen.add(card["Card Name"]);
-          uniqueChoices.push(card);
-        }
-      });
+      const missingPool = uniqueChoices.length % 3 === 0 ? "element" : uniqueChoices.length % 3 === 1 ? "type" : "random";
+      const additionalCards = getRandomOptions(
+        allCards.filter(
+          (card) =>
+            !seen.has(card["Card Name"]) &&
+            (!isSpecialPick || (card.LVL === "LV3" && card.Type !== "Relic" && card.Type !== "Spell")) &&
+            ((missingPool === "element" && card.Element === element) ||
+              (missingPool === "type" && card.Type === type) ||
+              missingPool === "random")
+        ),
+        1,
+        exclude
+      ).map((card) => ({
+        ...card,
+        pool: missingPool,
+      }));
+  
+      uniqueChoices.push(...additionalCards);
     }
   
+    console.log("Unique Choices generated:", uniqueChoices);
     setCurrentChoices(uniqueChoices);
-  };  
-  
-
-  const handleChooseCard = (card) => {
-    const updatedCards = [...draftedCards, card];
-    const newDraftRound = updatedCards.length;
-  
-    setDraftedCards(updatedCards);
-    if (newDraftRound < MAX_CARDS) {
-      generateNextChoices(selectedElement, selectedType, currentChoices, newDraftRound);
-    } else {
-      setStep(4);
-    }
   };
   
+  const handleChooseCard = (card) => {
+    setDraftedCards((prevDraftedCards) => [...prevDraftedCards, card]);
   
+    setRound((prevRound) => {
+      const nextRound = prevRound + 1
+  
+      if (nextRound < MAX_CARDS) {
+        console.log(nextRound)
+        generateNextChoices(
+          nextRound < 23 ? selectedElements[0] : selectedElements[1],
+          selectedType,
+          currentChoices,
+          nextRound + 1
+        );
+      } else {
+        setStep(4); // Final review step
+      }
+  
+      return nextRound; // Update round
+    });
+  };  
+
   const renderCard = (card, index) => (
-    <div
-      key={`${card["Card Name"]}-${index}`}
-      style={{
-        padding: "10px",
-        border: "1px solid #ccc",
-        borderRadius: "8px",
-        boxShadow: "0px 0px 10px rgba(0,0,0,0.1)",
-        margin: "10px",
-        textAlign: "center",
-        width: "200px",
-        backgroundColor: "#f9f9f9",
-      }}
-    >
+    <div key={`${card["Card Name"]}-${index}`} style={{
+      padding: "10px",
+      border: "1px solid #ccc",
+      borderRadius: "8px",
+      boxShadow: "0px 0px 10px rgba(0,0,0,0.1)",
+      margin: "10px",
+      textAlign: "center",
+      width: "200px",
+      backgroundColor: "#f9f9f9",
+    }}>
       <h4>Option {index + 1}</h4>
       <img
         src={`${CARD_ART_PATH}${card.Set}-${card.Id}.jpg`}
@@ -206,45 +274,37 @@ const Draft = () => {
         }}
       />
       <h4>{card["Card Name"]}</h4>
-      {card.Type !== "Relic" && card.Type !== "Spell" && (
-        <>
-          <p>Attack: {card.Attack}</p>
-          <p>Health: {card.Health}</p>
-        </>
-      )}
-      <button
-        onClick={() => handleChooseCard(card)}
-        style={{
-          marginTop: "10px",
-          padding: "5px 10px",
-          backgroundColor: "#4caf50",
-          color: "white",
-          border: "none",
-          borderRadius: "4px",
-          cursor: "pointer",
-        }}
-      >
+      <p>Attack: {card.Attack}</p>
+      <p>Health: {card.Health}</p>
+      <button onClick={() => handleChooseCard(card)} style={largeButtonStyle}>
         Choose
       </button>
     </div>
   );
-
-  const renderDraftedList = () => (
-    <div style={{ marginBottom: "20px", fontSize: "0.9rem", textAlign: "left" }}>
-      <h4>Drafted Cards:</h4>
-      <ul>
-        {draftedCards.map((card, index) => (
-          <li key={index}>{card["Card Name"]}</li>
-        ))}
-      </ul>
-    </div>
-  );
+  
+  const renderDraftedList = () => {
+    const cardCounts = draftedCards.reduce((acc, card) => {
+      const key = `${card["Card Name"]} (${card.Element})`;
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {});
+  
+    return (
+      <div>
+        <h4>Drafted Cards:</h4>
+        <ul>
+          {Object.entries(cardCounts).map(([key, count], index) => (
+            <li key={index}>{`${key} x${count}`}</li>
+          ))}
+        </ul>
+      </div>
+    );
+  };  
 
   const roundNumber = draftedCards.length + 1;
+  const availableElements = SHEET_NAMES.filter((el) => !selectedElements.includes(el));
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  if (loading) return <div>Loading...</div>;
 
   return (
     <div style={{ padding: "20px", textAlign: "center" }}>
@@ -257,7 +317,7 @@ const Draft = () => {
       {step === 1 && (
         <div>
           <h2>Select an Element</h2>
-          {getRandomOptions(SHEET_NAMES, 3).map((element) => (
+          {getRandomOptions(availableElements, 3).map((element) => (
             <button
               key={element}
               onClick={() => handleSelectElement(element)}
@@ -272,7 +332,7 @@ const Draft = () => {
       {step === 2 && (
         <div>
           <h2>Select a Type</h2>
-          {getRandomOptions(TYPES, 3).map((type) => (
+          {getRandomOptions(TYPES, 2).map((type) => (
             <button
               key={type}
               onClick={() => handleSelectType(type)}
