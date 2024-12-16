@@ -283,23 +283,79 @@ const Draft = () => {
   );
   
   const renderDraftedList = () => {
+    // Group and count cards
     const cardCounts = draftedCards.reduce((acc, card) => {
-      const key = `${card["Card Name"]} (${card.Element})`;
-      acc[key] = (acc[key] || 0) + 1;
+      const key = `${card["Card Name"]}`;
+      if (!acc[card.Element]) {
+        acc[card.Element] = {};
+      }
+      acc[card.Element][key] = (acc[card.Element][key] || 0) + 1;
       return acc;
     }, {});
   
+    // Sort elements based on order
+    const sortedElements = SHEET_NAMES.filter((element) => cardCounts[element]);
+  
+    // Background colors for each element
+    const backgroundColors = {
+      FIRE: "rgba(255, 0, 0, 0.1)", // Red
+      WATER: "rgba(0, 0, 255, 0.1)", // Blue
+      WIND: "rgba(0, 255, 0, 0.1)", // Green
+      EARTH: "rgba(210, 180, 140, 0.1)", // Light Brown
+      DARK: "rgba(75, 0, 130, 0.1)", // Dark Purple
+      LIGHT: "rgba(255, 255, 0, 0.1)", // Yellow
+    };
+  
     return (
       <div>
-        <h4>Drafted Cards:</h4>
-        <ul>
-          {Object.entries(cardCounts).map(([key, count], index) => (
-            <li key={index}>{`${key} x${count}`}</li>
+        <h4 style={{ textAlign: "center" }}>Drafted Cards:</h4>
+        {/* Centered container for all element groups */}
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: "1rem",
+            justifyContent: "center", // Centers horizontally
+          }}
+        >
+          {sortedElements.map((element) => (
+            <div
+              key={element}
+              style={{
+                display: "inline-flex",
+                flexDirection: "column",
+                alignItems: "center",
+                marginBottom: "1rem",
+                padding: "1rem", // Add padding for spacing inside the background
+                borderRadius: "8px", // Rounded corners
+                backgroundColor: backgroundColors[element], // Apply the element's background color
+                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)", // Optional: Add a subtle shadow for depth
+              }}
+            >
+              {/* Element Icon */}
+              <div style={{ display: "flex", alignItems: "center", marginBottom: "0.5rem" }}>
+                <img
+                  src={`${ELEMENTS_PATH}${element}.png`}
+                  alt={element}
+                  style={{ height: "24px", marginRight: "8px" }}
+                />
+                <h5 style={{ margin: 0 }}>{element}</h5>
+              </div>
+              {/* Cards for the element */}
+              <ul style={{ listStyleType: "none", paddingLeft: "1rem" }}>
+                {Object.entries(cardCounts[element]).map(([key, count], index) => (
+                  <li key={index} style={{ marginBottom: "0.5rem" }}>
+                    {`${key} x${count}`}
+                  </li>
+                ))}
+              </ul>
+            </div>
           ))}
-        </ul>
+        </div>
       </div>
     );
-  };  
+  };
+  
 
   const roundNumber = draftedCards.length + 1;
   const availableElements = SHEET_NAMES.filter((el) => !selectedElements.includes(el));
